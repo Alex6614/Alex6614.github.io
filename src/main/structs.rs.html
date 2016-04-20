@@ -83,14 +83,14 @@
 
 <span class='doccomment'>/// A tuple of a state and an action (which is a string), which is used as a key in the q_values HashMap to find the value of taking a certain action while in a certain state</span>
 <span class='attribute'>#[<span class='ident'>derive</span>(<span class='ident'>Hash</span>, <span class='ident'>Eq</span>, <span class='ident'>PartialEq</span>, <span class='ident'>Debug</span>)]</span>
-<span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>Key</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
+<span class='kw'>pub</span> <span class='kw'>struct</span> <span class='ident'>Key</span> {
 	<span class='ident'>state</span>: <span class='ident'>State</span>,
-	<span class='ident'>action</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>str</span>,
+	<span class='ident'>action</span>: <span class='ident'>String</span>,
 }
 
-<span class='kw'>impl</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> <span class='ident'>Key</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
+<span class='kw'>impl</span> <span class='ident'>Key</span> {
 	<span class='comment'>// Create a new State</span>
-	<span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>new</span>(<span class='ident'>state</span>: <span class='ident'>State</span>, <span class='ident'>action</span>: <span class='kw-2'>&amp;</span><span class='lifetime'>&#39;a</span> <span class='ident'>str</span>) <span class='op'>-&gt;</span> <span class='ident'>Key</span><span class='op'>&lt;</span><span class='lifetime'>&#39;a</span><span class='op'>&gt;</span> {
+	<span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>new</span>(<span class='ident'>state</span>: <span class='ident'>State</span>, <span class='ident'>action</span>: <span class='ident'>String</span>) <span class='op'>-&gt;</span> <span class='ident'>Key</span> {
 		<span class='ident'>Key</span> { <span class='ident'>state</span>: <span class='ident'>state</span>, <span class='ident'>action</span>: <span class='ident'>action</span> }
 	}
 }
