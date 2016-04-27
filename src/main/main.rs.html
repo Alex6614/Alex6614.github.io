@@ -188,6 +188,37 @@
 <span id="145">145</span>
 <span id="146">146</span>
 <span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
 </pre><pre class='rust '>
 <span class='kw'>extern</span> <span class='kw'>crate</span> <span class='ident'>rand</span>;
 <span class='kw'>mod</span> <span class='ident'>structs</span>;
@@ -195,146 +226,177 @@
 <span class='kw'>use</span> <span class='ident'>rand</span>::<span class='ident'>Rng</span>;
 <span class='kw'>use</span> <span class='ident'>structs</span>::{<span class='ident'>State</span>, <span class='ident'>Key</span>};
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>collections</span>::<span class='ident'>HashMap</span>;
-<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>io</span>;
-<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>process</span>::{<span class='ident'>Command</span>, <span class='ident'>ChildStdout</span>, <span class='ident'>Stdio</span>};
+<span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>process</span>::{<span class='ident'>Command</span>, <span class='ident'>Stdio</span>};
 <span class='kw'>use</span> <span class='ident'>std</span>::<span class='ident'>io</span>::<span class='ident'>prelude</span>::<span class='op'>*</span>;
-<span class='doccomment'>/// Initializes the Q-value table and the gamma number used in Q-Learning, then runs the game infinitely</span>
+<span class='doccomment'>/// Initializes parameters for Q-learning and runs the game infinitely.</span>
+<span class='doccomment'>/// </span>
+<span class='doccomment'>/// Initializes the Q-value table, the gamma number, and the decision policy used to decide on actions.</span>
 <span class='doccomment'>///</span>
-<span class='doccomment'>/// TODO: Get rid of all the warnings</span>
+<span class='doccomment'>/// Prints to console the number of times the game has been played, and the score of each iteration.</span>
 <span class='kw'>fn</span> <span class='ident'>main</span>() {
 
-    <span class='comment'>// 1. Initialize structures and learning rates for learning</span>
+    <span class='comment'>// 1. Initialize structures and learning rates for learning and decision policy</span>
     <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>q_values</span> <span class='op'>=</span> <span class='ident'>HashMap</span>::<span class='ident'>new</span>();
-    <span class='kw'>let</span> <span class='ident'>gamma</span> : <span class='ident'>f32</span> <span class='op'>=</span> <span class='number'>0.1</span>;
+    <span class='kw'>let</span> <span class='ident'>gamma</span> : <span class='ident'>f32</span> <span class='op'>=</span> <span class='number'>0.9</span>;
+    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>iteration</span> :<span class='ident'>i32</span> <span class='op'>=</span> <span class='number'>0</span>;
+    <span class='kw'>let</span> <span class='ident'>decision_policy</span> <span class='op'>=</span> <span class='number'>1</span>;
 
-    <span class='comment'>// Initialize other things...</span>
-    <span class='comment'>// Run game</span>
+    <span class='comment'>// Run game while printing how many times the game has been played</span>
     <span class='kw'>loop</span>{
-        <span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;{}&quot;</span>, <span class='ident'>run_game</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>q_values</span>, <span class='ident'>gamma</span>));
+        <span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;Iteration number: {}&quot;</span>, <span class='ident'>iteration</span>);
+        <span class='macro'>println</span><span class='macro'>!</span>(<span class='string'>&quot;{}&quot;</span>, <span class='ident'>run_game</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>q_values</span>, <span class='ident'>gamma</span>, <span class='ident'>decision_policy</span>));
+        <span class='ident'>iteration</span> <span class='op'>+=</span> <span class='number'>1</span>;
     }
 }
-<span class='doccomment'>/// Runs the game and updates the Q-Value table as it plays</span>
+
+<span class='doccomment'>/// Runs the game and updates the Q-Value table as it plays.</span>
 <span class='doccomment'>///</span>
-<span class='doccomment'>/// This can be run on any game that generates output in a certain format (State, Reward, Actions). Stops when the game quits.</span>
+<span class='doccomment'>/// This can be run on any game that generates output in a certain format (State, Reward, Actions). </span>
 <span class='doccomment'>///</span>
-<span class='doccomment'>/// TODO: make running the game and reading the lines a separate function for readability,</span>
-<span class='doccomment'>/// change the value in the table from i32s to f32s for higher accuracy</span>
-<span class='kw'>fn</span> <span class='ident'>run_game</span>(<span class='ident'>q_values</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>HashMap</span><span class='op'>&lt;</span><span class='ident'>Key</span>, <span class='ident'>i32</span><span class='op'>&gt;</span>, <span class='ident'>gamma</span>: <span class='ident'>f32</span>) <span class='op'>-&gt;</span> <span class='ident'>String</span> {
-    <span class='comment'>// 2. Run game and grab: state, reward, actions</span>
-    <span class='comment'>// 2a. TODO: Run the game</span>
+<span class='doccomment'>/// Utilizes child processes to run the game. Receives and handles standard output of the game executable by collecting them into structures like vecs for actions. Utilizes find_best on the current state to find the best action in order to perform an update for the previous state and previous action taken. Then uses the decide function to decide what action to take next. This is affected by chance.</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// This function contains a loop which terminates when the game quits (Once the game quits, program will run into an error when trying to parse the next state. The error is handled by returning the current reward). It will continuously loop between looking for standard output, updating the previous state, and then deciding on which action to take next.</span>
+<span class='kw'>fn</span> <span class='ident'>run_game</span>(<span class='ident'>q_values</span>: <span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>HashMap</span><span class='op'>&lt;</span><span class='ident'>Key</span>, <span class='ident'>i32</span><span class='op'>&gt;</span>, <span class='ident'>gamma</span>: <span class='ident'>f32</span>, <span class='ident'>decision_policy</span>: <span class='ident'>i32</span>) <span class='op'>-&gt;</span> <span class='ident'>String</span> {
+
+    <span class='comment'>// 2. Run game (create the child process) and grab: state, reward, actions</span>
     <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>child</span> <span class='op'>=</span> <span class='ident'>Command</span>::<span class='ident'>new</span>(<span class='string'>&quot;solution&quot;</span>)
                     .<span class='ident'>stdin</span>(<span class='ident'>Stdio</span>::<span class='ident'>piped</span>()).<span class='ident'>stdout</span>(<span class='ident'>Stdio</span>::<span class='ident'>piped</span>())
                     .<span class='ident'>spawn</span>().<span class='ident'>unwrap_or_else</span>(<span class='op'>|</span><span class='ident'>e</span><span class='op'>|</span> { <span class='macro'>panic</span><span class='macro'>!</span>(<span class='string'>&quot;failed to execute child: {}&quot;</span>, <span class='ident'>e</span>)});
     <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>buffer</span> <span class='op'>=</span> <span class='ident'>std</span>::<span class='ident'>io</span>::<span class='ident'>BufReader</span>::<span class='ident'>new</span>(<span class='ident'>child</span>.<span class='ident'>stdout</span>.<span class='ident'>take</span>().<span class='ident'>unwrap</span>());
     <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>input</span> <span class='op'>=</span> <span class='ident'>child</span>.<span class='ident'>stdin</span>.<span class='ident'>take</span>().<span class='ident'>unwrap</span>();
+
     <span class='comment'>// 2b. Taking in input from the game</span>
-    <span class='comment'>// (EXTENSION: expect more than one state on a line, split by |)</span>
     <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>states_initial</span> <span class='op'>=</span> <span class='ident'>String</span>::<span class='ident'>new</span>();
     <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>rewards_initial</span> <span class='op'>=</span> <span class='ident'>String</span>::<span class='ident'>new</span>();
     <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>actions_initial</span> <span class='op'>=</span> <span class='ident'>String</span>::<span class='ident'>new</span>();
-    <span class='ident'>buffer</span>.<span class='ident'>read_line</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>states_initial</span>);
-    <span class='ident'>buffer</span>.<span class='ident'>read_line</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>rewards_initial</span>);
-    <span class='ident'>buffer</span>.<span class='ident'>read_line</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>actions_initial</span>);
+    <span class='ident'>buffer</span>.<span class='ident'>read_line</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>states_initial</span>).<span class='ident'>expect</span>(<span class='string'>&quot;Failed to read line&quot;</span>);
+    <span class='ident'>buffer</span>.<span class='ident'>read_line</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>rewards_initial</span>).<span class='ident'>expect</span>(<span class='string'>&quot;Failed to read line&quot;</span>);
+    <span class='ident'>buffer</span>.<span class='ident'>read_line</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>actions_initial</span>).<span class='ident'>expect</span>(<span class='string'>&quot;Failed to read line&quot;</span>);
     <span class='ident'>states_initial</span> <span class='op'>=</span> <span class='ident'>states_initial</span>.<span class='ident'>trim</span>().<span class='ident'>to_string</span>();
     <span class='ident'>rewards_initial</span> <span class='op'>=</span> <span class='ident'>rewards_initial</span>.<span class='ident'>trim</span>().<span class='ident'>to_string</span>();
     <span class='ident'>actions_initial</span> <span class='op'>=</span> <span class='ident'>actions_initial</span>.<span class='ident'>trim</span>().<span class='ident'>to_string</span>();
+
     <span class='comment'>// 2bi. Collecting Actions</span>
-    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>splitted_actions_initial</span> <span class='op'>=</span> <span class='ident'>actions_initial</span>.<span class='ident'>split</span>(<span class='string'>&quot;|&quot;</span>);
+    <span class='kw'>let</span> <span class='ident'>splitted_actions_initial</span> <span class='op'>=</span> <span class='ident'>actions_initial</span>.<span class='ident'>split</span>(<span class='string'>&quot;|&quot;</span>);
     <span class='kw'>let</span> <span class='ident'>action_vec_initial</span> <span class='op'>=</span> <span class='ident'>splitted_actions_initial</span>.<span class='ident'>collect</span>::<span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='ident'>str</span><span class='op'>&gt;&gt;</span>();
 
-    <span class='comment'>// (PROTOTYPE: assuming states will always be a number)</span>
-    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>states_initial</span>: <span class='ident'>i32</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>states_initial</span>.<span class='ident'>parse</span>() {
+    <span class='comment'>// 2bii. Parsing state as a number</span>
+    <span class='comment'>// If you fail to get a state, that means the game is over and you return the final reward</span>
+    <span class='kw'>let</span> <span class='ident'>states_initial</span>: <span class='ident'>i32</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>states_initial</span>.<span class='ident'>parse</span>() {
         <span class='prelude-val'>Ok</span>(<span class='ident'>n</span>) <span class='op'>=&gt;</span> <span class='ident'>n</span>,
-        <span class='prelude-val'>Err</span>(<span class='ident'>err</span>) <span class='op'>=&gt;</span> <span class='kw'>return</span> <span class='ident'>rewards_initial</span>,
+        _ <span class='op'>=&gt;</span> <span class='kw'>return</span> <span class='ident'>rewards_initial</span>,
     };
+
     <span class='comment'>// 3. Decide on next action</span>
     <span class='comment'>// 3a. Create chosen_action: String, score: i32</span>
-    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>chosen_action</span> <span class='op'>=</span> <span class='string'>&quot;&quot;</span>;
-    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>score</span> <span class='op'>=</span> <span class='op'>-</span><span class='number'>1</span>;
     <span class='comment'>// 3b. Iterate through the vec action_vec</span>
     <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>states</span> <span class='op'>=</span> <span class='ident'>states_initial</span>;
-    <span class='comment'>// let mut previous_action = chosen_action.to_string();</span>
-    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>previous_action</span> <span class='op'>=</span> <span class='ident'>decide</span>(<span class='kw-2'>&amp;</span><span class='ident'>q_values</span>, <span class='ident'>states_initial</span>.<span class='ident'>clone</span>(),<span class='ident'>action_vec_initial</span>);
+    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>best_actions</span> <span class='op'>=</span> <span class='ident'>find_best</span>(<span class='kw-2'>&amp;</span><span class='ident'>q_values</span>, <span class='ident'>states_initial</span>.<span class='ident'>clone</span>(), <span class='kw-2'>&amp;</span><span class='ident'>action_vec_initial</span>);
+    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>previous_action</span> <span class='op'>=</span> <span class='ident'>best_actions</span>[<span class='number'>0</span>].<span class='ident'>clone</span>();
     <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>previous_reward</span> <span class='op'>=</span> <span class='number'>0</span>;
+
     <span class='comment'>// BEGIN LOOP HERE ========================================================</span>
     <span class='kw'>loop</span>{
-        <span class='comment'>// 4. Grab next state, reward, actions</span>
-        <span class='comment'>// Be sure not to overwrite previous states, and chosen_action</span>
 
+        <span class='comment'>// 4. Grab next state, reward, actions</span>
         <span class='kw'>let</span> <span class='ident'>prev_action</span> <span class='op'>=</span> <span class='ident'>previous_action</span>.<span class='ident'>clone</span>();
         <span class='kw'>let</span> <span class='ident'>prev_state</span> <span class='op'>=</span> <span class='ident'>states</span>.<span class='ident'>clone</span>();
-        <span class='comment'>// 4a. TODO: Rerun the game with prev_action as the input</span>
-        <span class='ident'>input</span>.<span class='ident'>write</span>((<span class='ident'>prev_action</span>.<span class='ident'>clone</span>() <span class='op'>+</span> <span class='string'>&quot;\n&quot;</span>).<span class='ident'>as_bytes</span>());
+
+        <span class='comment'>// 4a. Send input to the game</span>
+        <span class='ident'>input</span>.<span class='ident'>write</span>((<span class='ident'>prev_action</span>.<span class='ident'>clone</span>() <span class='op'>+</span> <span class='string'>&quot;\n&quot;</span>).<span class='ident'>as_bytes</span>()).<span class='ident'>expect</span>(<span class='string'>&quot;Failed to write to child process&quot;</span>);
+
         <span class='comment'>// 4b. Taking input from the next run</span>
         <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>next_states</span> <span class='op'>=</span> <span class='ident'>String</span>::<span class='ident'>new</span>();
         <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>next_reward</span> <span class='op'>=</span> <span class='ident'>String</span>::<span class='ident'>new</span>();
         <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>next_actions</span> <span class='op'>=</span> <span class='ident'>String</span>::<span class='ident'>new</span>();
-        <span class='ident'>buffer</span>.<span class='ident'>read_line</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>next_states</span>);
-        <span class='ident'>buffer</span>.<span class='ident'>read_line</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>next_reward</span>);
-        <span class='ident'>buffer</span>.<span class='ident'>read_line</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>next_actions</span>);
+        <span class='ident'>buffer</span>.<span class='ident'>read_line</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>next_states</span>).<span class='ident'>expect</span>(<span class='string'>&quot;Failed to read line&quot;</span>);
+        <span class='ident'>buffer</span>.<span class='ident'>read_line</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>next_reward</span>).<span class='ident'>expect</span>(<span class='string'>&quot;Failed to read line&quot;</span>);
+        <span class='ident'>buffer</span>.<span class='ident'>read_line</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='ident'>next_actions</span>).<span class='ident'>expect</span>(<span class='string'>&quot;Failed to read line&quot;</span>);
         <span class='ident'>next_states</span> <span class='op'>=</span> <span class='ident'>next_states</span>.<span class='ident'>trim</span>().<span class='ident'>to_string</span>();
         <span class='ident'>next_reward</span> <span class='op'>=</span> <span class='ident'>next_reward</span>.<span class='ident'>trim</span>().<span class='ident'>to_string</span>();
         <span class='ident'>next_actions</span> <span class='op'>=</span> <span class='ident'>next_actions</span>.<span class='ident'>trim</span>().<span class='ident'>to_string</span>();
+
         <span class='comment'>// 4bi. Collecting Actions</span>
-        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>next_splitted_actions</span> <span class='op'>=</span> <span class='ident'>next_actions</span>.<span class='ident'>split</span>(<span class='string'>&quot;|&quot;</span>);
+        <span class='kw'>let</span> <span class='ident'>next_splitted_actions</span> <span class='op'>=</span> <span class='ident'>next_actions</span>.<span class='ident'>split</span>(<span class='string'>&quot;|&quot;</span>);
         <span class='kw'>let</span> <span class='ident'>next_action_vec</span> <span class='op'>=</span> <span class='ident'>next_splitted_actions</span>.<span class='ident'>collect</span>::<span class='op'>&lt;</span><span class='ident'>Vec</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='ident'>str</span><span class='op'>&gt;&gt;</span>();
-        <span class='comment'>// (PROTOTYPE: assuming states will always be a number)</span>
-        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>next_states</span>: <span class='ident'>i32</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>next_states</span>.<span class='ident'>parse</span>() {
+
+        <span class='comment'>// 4bii. Collecting States</span>
+        <span class='kw'>let</span> <span class='ident'>next_states</span>: <span class='ident'>i32</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>next_states</span>.<span class='ident'>parse</span>() {
             <span class='prelude-val'>Ok</span>(<span class='ident'>n</span>) <span class='op'>=&gt;</span> <span class='ident'>n</span>,
-            <span class='prelude-val'>Err</span>(<span class='ident'>err</span>) <span class='op'>=&gt;</span> <span class='kw'>return</span> <span class='ident'>previous_reward</span>.<span class='ident'>to_string</span>(),
+            _ <span class='op'>=&gt;</span> {
+                <span class='kw'>return</span> <span class='ident'>previous_reward</span>.<span class='ident'>to_string</span>()
+            },
         };
-        <span class='comment'>// (PROTOTYPE: assuming states will always be a number)</span>
-        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>next_reward</span>: <span class='ident'>i32</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>next_reward</span>.<span class='ident'>parse</span>() {
+
+        <span class='comment'>// 4biii. Collecting rewards</span>
+        <span class='kw'>let</span> <span class='ident'>next_reward</span>: <span class='ident'>i32</span> <span class='op'>=</span> <span class='kw'>match</span> <span class='ident'>next_reward</span>.<span class='ident'>parse</span>() {
             <span class='prelude-val'>Ok</span>(<span class='ident'>n</span>) <span class='op'>=&gt;</span> <span class='ident'>n</span>,
-            <span class='prelude-val'>Err</span>(<span class='ident'>err</span>) <span class='op'>=&gt;</span> <span class='kw'>return</span> <span class='ident'>previous_reward</span>.<span class='ident'>to_string</span>(),
+            _ <span class='op'>=&gt;</span> <span class='kw'>return</span> <span class='ident'>previous_reward</span>.<span class='ident'>to_string</span>(),
         };
         <span class='ident'>states</span> <span class='op'>=</span> <span class='ident'>next_states</span>.<span class='ident'>clone</span>();
 
         <span class='comment'>// 5. Find next action</span>
-        <span class='ident'>previous_action</span> <span class='op'>=</span> <span class='ident'>decide</span>(<span class='kw-2'>&amp;</span><span class='ident'>q_values</span>,<span class='ident'>next_states</span>.<span class='ident'>clone</span>(), <span class='ident'>next_action_vec</span>);
+        <span class='ident'>best_actions</span> <span class='op'>=</span> <span class='ident'>find_best</span>(<span class='kw-2'>&amp;</span><span class='ident'>q_values</span>,<span class='ident'>next_states</span>.<span class='ident'>clone</span>(), <span class='kw-2'>&amp;</span><span class='ident'>next_action_vec</span>);
+        <span class='ident'>previous_action</span> <span class='op'>=</span> <span class='ident'>best_actions</span>[<span class='number'>0</span>].<span class='ident'>clone</span>();
+
         <span class='comment'>// 6. Update previous state</span>
-        <span class='comment'>// println!(&quot;The previous action was:{}&quot;, prev_action);</span>
-        <span class='comment'>// println!(&quot;The current action is:{}&quot;, previous_action);</span>
-        <span class='comment'>// println!(&quot;The previous state was:{}&quot;, prev_state);</span>
-        <span class='comment'>// println!(&quot;The current state is:{}&quot;, next_states);</span>
-        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>max_reward</span>:<span class='ident'>f32</span> <span class='op'>=</span> <span class='number'>0</span> <span class='kw'>as</span> <span class='ident'>f32</span>;
+        <span class='kw'>let</span> <span class='ident'>max_reward</span>:<span class='ident'>f32</span>;
         <span class='kw'>match</span> <span class='ident'>q_values</span>.<span class='ident'>get</span>(<span class='kw-2'>&amp;</span><span class='ident'>Key</span>::<span class='ident'>new</span>(<span class='ident'>State</span>::<span class='ident'>new</span>(<span class='ident'>next_states</span>), <span class='ident'>previous_action</span>.<span class='ident'>clone</span>().<span class='ident'>to_string</span>())){
             <span class='prelude-val'>Some</span>(<span class='ident'>reward</span>) <span class='op'>=&gt;</span> <span class='ident'>max_reward</span> <span class='op'>=</span> <span class='op'>*</span><span class='ident'>reward</span> <span class='kw'>as</span> <span class='ident'>f32</span>,
             <span class='prelude-val'>None</span> <span class='op'>=&gt;</span> <span class='ident'>max_reward</span> <span class='op'>=</span> <span class='number'>0</span> <span class='kw'>as</span> <span class='ident'>f32</span>,
         }
-        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>updated_value</span> <span class='op'>=</span> <span class='ident'>next_reward</span> <span class='kw'>as</span> <span class='ident'>f32</span> <span class='op'>+</span> <span class='ident'>gamma</span> <span class='op'>*</span> <span class='ident'>max_reward</span>;
+        <span class='kw'>let</span> <span class='ident'>updated_value</span> <span class='op'>=</span> <span class='ident'>next_reward</span> <span class='kw'>as</span> <span class='ident'>f32</span> <span class='op'>+</span> <span class='ident'>gamma</span> <span class='op'>*</span> <span class='ident'>max_reward</span>;
         <span class='ident'>q_values</span>.<span class='ident'>insert</span>(<span class='ident'>Key</span>::<span class='ident'>new</span>(<span class='ident'>State</span>::<span class='ident'>new</span>(<span class='ident'>prev_state</span>), <span class='ident'>prev_action</span>), <span class='ident'>updated_value</span> <span class='kw'>as</span> <span class='ident'>i32</span>);
-
         <span class='ident'>previous_reward</span> <span class='op'>=</span> <span class='ident'>next_reward</span>;
+        <span class='ident'>previous_action</span> <span class='op'>=</span> <span class='ident'>decide</span>(<span class='kw-2'>&amp;</span><span class='ident'>next_action_vec</span>, <span class='kw-2'>&amp;</span><span class='ident'>best_actions</span>, <span class='ident'>decision_policy</span>);
     }
     <span class='comment'>// END LOOP HERE ========================================================</span>
+
 }
 
-<span class='doccomment'>/// Decides on which action to use given the Q-value table and what actions are available.</span>
+<span class='doccomment'>/// Depending on chance, outputs the actions with the highest reward, or decides on an action depending on the decision policy.</span>
 <span class='doccomment'>///</span>
-<span class='doccomment'>/// TODO: Make two other &#39;decide&#39; functions that chooses actions in different ways, then see if they are any more efficient</span>
-<span class='kw'>fn</span> <span class='ident'>decide</span>(<span class='ident'>q_values</span>: <span class='kw-2'>&amp;</span><span class='ident'>HashMap</span><span class='op'>&lt;</span><span class='ident'>Key</span>, <span class='ident'>i32</span><span class='op'>&gt;</span>, <span class='ident'>current_state</span>: <span class='ident'>i32</span>, <span class='ident'>vec</span>: <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='ident'>str</span><span class='op'>&gt;</span>) <span class='op'>-&gt;</span> <span class='ident'>String</span> {
+<span class='doccomment'>/// If the decision policy is 0, it randomly picks an action out of all the actions currently available.</span>
+<span class='doccomment'>///</span>
+<span class='doccomment'>/// If the decision policy is 1, it picks the second best action</span>
+
+<span class='kw'>fn</span> <span class='ident'>decide</span>(<span class='ident'>action_vec</span>: <span class='kw-2'>&amp;</span><span class='ident'>Vec</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='ident'>str</span><span class='op'>&gt;</span>, <span class='ident'>best_vec</span>: <span class='kw-2'>&amp;</span><span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>String</span><span class='op'>&gt;</span>, <span class='ident'>policy</span>: <span class='ident'>i32</span>) <span class='op'>-&gt;</span> <span class='ident'>String</span> {
     <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>rng</span> <span class='op'>=</span> <span class='ident'>rand</span>::<span class='ident'>thread_rng</span>();
     <span class='kw'>let</span> <span class='ident'>random_number</span> <span class='op'>=</span> <span class='ident'>rng</span>.<span class='ident'>gen</span>::<span class='op'>&lt;</span><span class='ident'>f32</span><span class='op'>&gt;</span>();
-
-    <span class='kw'>if</span> <span class='ident'>random_number</span> <span class='op'>&lt;</span> <span class='number'>0.01</span> {
-        <span class='ident'>rand</span>::<span class='ident'>thread_rng</span>().<span class='ident'>choose</span>(<span class='kw-2'>&amp;</span><span class='ident'>vec</span>).<span class='ident'>unwrap</span>().<span class='ident'>to_string</span>()
-    } <span class='kw'>else</span> {
-        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>score</span> <span class='op'>=</span> <span class='op'>-</span><span class='number'>1</span>;
-        <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>chosen_action</span> <span class='op'>=</span> <span class='ident'>String</span>::<span class='ident'>new</span>();
-        <span class='kw'>for</span> <span class='ident'>action</span> <span class='kw'>in</span> <span class='ident'>vec</span>.<span class='ident'>iter</span>(){
-            <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>action_score</span> <span class='op'>=</span> <span class='number'>0</span>;
-            <span class='kw'>match</span> <span class='ident'>q_values</span>.<span class='ident'>get</span>(<span class='kw-2'>&amp;</span><span class='ident'>Key</span>::<span class='ident'>new</span>(<span class='ident'>State</span>::<span class='ident'>new</span>(<span class='ident'>current_state</span>), <span class='ident'>action</span>.<span class='ident'>clone</span>().<span class='ident'>to_string</span>())){
-                <span class='prelude-val'>Some</span>(<span class='ident'>reward</span>) <span class='op'>=&gt;</span> <span class='ident'>action_score</span> <span class='op'>=</span> <span class='op'>*</span><span class='ident'>reward</span>,
-                <span class='prelude-val'>None</span> <span class='op'>=&gt;</span> <span class='ident'>action_score</span> <span class='op'>=</span> <span class='number'>0</span>,
-            }
-            <span class='kw'>if</span> <span class='ident'>action_score</span> <span class='op'>&gt;</span> <span class='ident'>score</span> {
-                <span class='ident'>chosen_action</span> <span class='op'>=</span> <span class='ident'>action</span>.<span class='ident'>to_string</span>();
-                <span class='ident'>score</span> <span class='op'>=</span> <span class='ident'>action_score</span>
-            }
+    <span class='kw'>if</span> <span class='ident'>random_number</span> <span class='op'>&lt;</span> <span class='number'>0.3</span> {
+        <span class='kw'>if</span> <span class='ident'>policy</span> <span class='op'>==</span> <span class='number'>0</span> {
+            <span class='ident'>rand</span>::<span class='ident'>thread_rng</span>().<span class='ident'>choose</span>(<span class='kw-2'>&amp;</span><span class='ident'>action_vec</span>).<span class='ident'>unwrap</span>().<span class='ident'>to_string</span>()
+        } <span class='kw'>else</span> {
+            <span class='ident'>best_vec</span>[<span class='number'>1</span>].<span class='ident'>clone</span>()
         }
-        <span class='ident'>chosen_action</span>
+    } <span class='kw'>else</span> {
+        <span class='ident'>best_vec</span>[<span class='number'>0</span>].<span class='ident'>clone</span>()
     }
+}
+
+<span class='doccomment'>/// Looks through actions available and the player&#39;s current state, and returns a vector containing two actions that provide the top two rewards</span>
+<span class='kw'>fn</span> <span class='ident'>find_best</span>(<span class='ident'>q_values</span>: <span class='kw-2'>&amp;</span><span class='ident'>HashMap</span><span class='op'>&lt;</span><span class='ident'>Key</span>, <span class='ident'>i32</span><span class='op'>&gt;</span>, <span class='ident'>current_state</span>: <span class='ident'>i32</span>, <span class='ident'>vec</span>: <span class='kw-2'>&amp;</span><span class='ident'>Vec</span><span class='op'>&lt;</span><span class='kw-2'>&amp;</span><span class='ident'>str</span><span class='op'>&gt;</span>) <span class='op'>-&gt;</span> <span class='ident'>Vec</span><span class='op'>&lt;</span><span class='ident'>String</span><span class='op'>&gt;</span> {
+    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>best_score</span> <span class='op'>=</span> <span class='op'>-</span><span class='number'>10000</span>;
+    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>second_score</span> <span class='op'>=</span> <span class='op'>-</span><span class='number'>10000</span>;
+    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>best_action</span> <span class='op'>=</span> <span class='ident'>String</span>::<span class='ident'>new</span>();
+    <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>second_action</span> <span class='op'>=</span> <span class='ident'>String</span>::<span class='ident'>new</span>();
+    <span class='kw'>for</span> <span class='ident'>action</span> <span class='kw'>in</span> <span class='ident'>vec</span>.<span class='ident'>iter</span>(){
+        <span class='kw'>let</span> <span class='ident'>action_score</span>;
+        <span class='kw'>match</span> <span class='ident'>q_values</span>.<span class='ident'>get</span>(<span class='kw-2'>&amp;</span><span class='ident'>Key</span>::<span class='ident'>new</span>(<span class='ident'>State</span>::<span class='ident'>new</span>(<span class='ident'>current_state</span>), <span class='ident'>action</span>.<span class='ident'>clone</span>().<span class='ident'>to_string</span>())){
+            <span class='prelude-val'>Some</span>(<span class='ident'>reward</span>) <span class='op'>=&gt;</span> <span class='ident'>action_score</span> <span class='op'>=</span> <span class='op'>*</span><span class='ident'>reward</span>,
+            <span class='prelude-val'>None</span> <span class='op'>=&gt;</span> <span class='ident'>action_score</span> <span class='op'>=</span> <span class='number'>0</span>,
+        }
+        <span class='kw'>if</span> <span class='ident'>action_score</span> <span class='op'>&gt;</span> <span class='ident'>best_score</span> {
+            <span class='ident'>second_score</span> <span class='op'>=</span> <span class='ident'>best_score</span>.<span class='ident'>clone</span>();
+            <span class='ident'>second_action</span> <span class='op'>=</span> <span class='ident'>best_action</span>.<span class='ident'>clone</span>();
+            <span class='ident'>best_action</span> <span class='op'>=</span> <span class='ident'>action</span>.<span class='ident'>to_string</span>();
+            <span class='ident'>best_score</span> <span class='op'>=</span> <span class='ident'>action_score</span>;
+        } <span class='kw'>else</span> <span class='kw'>if</span> <span class='ident'>action_score</span> <span class='op'>&gt;=</span> <span class='ident'>second_score</span> {
+            <span class='ident'>second_score</span> <span class='op'>=</span> <span class='ident'>action_score</span>;
+            <span class='ident'>second_action</span> <span class='op'>=</span> <span class='ident'>action</span>.<span class='ident'>to_string</span>();
+        }
+    }
+    <span class='macro'>vec</span><span class='macro'>!</span>[<span class='ident'>best_action</span>, <span class='ident'>second_action</span>]
 }</pre>
 </section>
     <section id='search' class="content hidden"></section>
